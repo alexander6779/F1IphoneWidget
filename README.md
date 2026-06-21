@@ -23,7 +23,7 @@ This is a script optimized for the **Scriptable** application on iOS. It display
 ## 🚀 Installation & Setup Guide
 
 ### Step 1: Add the Code to Scriptable
-1. Copy the full source code of your F1 script.
+1. Copy the full source code of F1 script.
 2. Open the **Scriptable** app on your iPhone.
 3. Tap the **"+"** button in the top-right corner to create a new script.
 4. Clear any default text and **paste the code**.
