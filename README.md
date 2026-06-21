@@ -20,6 +20,248 @@ This is a script optimized for the **Scriptable** application on iOS. It display
 
 ---
 
+## 🌟 Source Code
+
+```javascript
+// ─────────────────────────────────────────────
+// F1 NEXT RACE — COMPACT PREMIUM WIDGET
+// Optimizado para widget mediano iPhone
+// ─────────────────────────────────────────────
+
+const API_URL =
+  "[https://api.jolpi.ca/ergast/f1/current/next.json](https://api.jolpi.ca/ergast/f1/current/next.json)"
+
+const widget = new ListWidget()
+
+// ─────────────────────────────
+// STYLE
+// ─────────────────────────────
+widget.backgroundColor = new Color("#07070c")
+widget.setPadding(14, 14, 12, 14)
+
+Request.defaultTimeoutInterval = 8
+
+// ─────────────────────────────
+// CACHE
+// ─────────────────────────────
+const fm = FileManager.local()
+
+const cachePath = fm.joinPath(
+  fm.documentsDirectory(),
+  "f1-cache.json"
+)
+
+async function getData() {
+
+  try {
+
+    const req = new Request(API_URL)
+    req.timeoutInterval = 8
+
+    const data = await req.loadJSON()
+
+    fm.writeString(
+      cachePath,
+      JSON.stringify(data)
+    )
+
+    return data
+
+  } catch (e) {
+
+    if (fm.fileExists(cachePath)) {
+
+      return JSON.parse(
+        fm.readString(cachePath)
+      )
+    }
+
+    throw e
+  }
+}
+
+// ─────────────────────────────
+// DATA
+// ─────────────────────────────
+const data = await getData()
+
+const race =
+  data.MRData.RaceTable.Races[0]
+
+// ─────────────────────────────
+// HELPERS
+// ─────────────────────────────
+
+function formatSession(date, time) {
+
+  const dt =
+    new Date(`${date}T${time}`)
+
+  return dt.toLocaleString(
+    "es-ES",
+    {
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  )
+}
+
+function formatRaceDate(date) {
+
+  return new Date(date)
+    .toLocaleDateString(
+      "es-ES",
+      {
+        day: "2-digit",
+        month: "short"
+      }
+    )
+}
+
+function addSession(label, sessionData) {
+
+  if (!sessionData) return
+
+  const row = widget.addStack()
+  row.layoutHorizontally()
+
+  const left =
+    row.addText(label)
+
+  left.font =
+    Font.boldSystemFont(11)
+
+  left.textColor =
+    label === "RACE"
+      ? new Color("#00e5ff")
+      : label.includes("SPR")
+        ? new Color("#ff9f0a")
+        : Color.white()
+
+  row.addSpacer()
+
+  const right =
+    row.addText(
+      formatSession(
+        sessionData.date,
+        sessionData.time
+      )
+    )
+
+  right.font =
+    Font.mediumSystemFont(10)
+
+  right.textColor =
+    new Color("#8f95b2")
+
+  widget.addSpacer(4)
+}
+
+// ─────────────────────────────
+// HEADER
+// ─────────────────────────────
+const header = widget.addStack()
+
+const title =
+  header.addText("F1")
+
+title.font =
+  Font.boldSystemFont(13)
+
+title.textColor =
+  new Color("#ff1744")
+
+header.addSpacer()
+
+const local =
+  header.addText("LOCAL")
+
+local.font =
+  Font.mediumSystemFont(9)
+
+local.textColor =
+  new Color("#666a85")
+
+widget.addSpacer(8)
+
+// ─────────────────────────────
+// GP NAME
+// ─────────────────────────────
+const gp =
+  widget.addText(
+    race.raceName.toUpperCase()
+  )
+
+gp.font =
+  Font.boldSystemFont(18)
+
+gp.textColor =
+  Color.white()
+
+gp.lineLimit = 2
+
+widget.addSpacer(2)
+
+// ─────────────────────────────
+// CIRCUIT + DATE
+// ─────────────────────────────
+const info =
+  widget.addText(
+    `${race.Circuit.circuitName} • ${formatRaceDate(race.date)}`
+  )
+
+info.font =
+  Font.mediumSystemFont(11)
+
+info.textColor =
+  new Color("#00cfff")
+
+widget.addSpacer(12)
+
+// ─────────────────────────────
+// SESSIONS
+// ─────────────────────────────
+
+addSession("FP1", race.FirstPractice)
+addSession("FP2", race.SecondPractice)
+addSession("FP3", race.ThirdPractice)
+
+if (race.SprintQualifying) {
+  addSession("SPR Q", race.SprintQualifying)
+}
+
+if (race.Sprint) {
+  addSession("SPR", race.Sprint)
+}
+
+addSession("QUALI", race.Qualifying)
+
+addSession("RACE", {
+  date: race.date,
+  time: race.time
+})
+
+// ─────────────────────────────
+// AUTO REFRESH
+// ─────────────────────────────
+widget.refreshAfterDate =
+  new Date(
+    Date.now() + 1000 * 60 * 30
+  )
+
+// ─────────────────────────────
+// SHOW
+// ─────────────────────────────
+Script.setWidget(widget)
+
+if (!config.runsInWidget) {
+  await widget.presentMedium()
+}
+
+Script.complete()
+```
+
 ## 🚀 Installation & Setup Guide
 
 ### Step 1: Add the Code to Scriptable
